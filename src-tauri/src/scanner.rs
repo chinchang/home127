@@ -11,6 +11,7 @@ pub struct ServerInfo {
     title: String,
     url: String,
     pid: Option<u32>,
+    path: Option<String>,
 }
 
 #[tauri::command]
@@ -38,6 +39,9 @@ pub fn scan_servers() -> Vec<ServerInfo> {
         if is_port_open(port) {
             if let Some(mut info) = check_http_server(port, &client) {
                 info.pid = get_pid_for_port(port);
+                if let Some(pid) = info.pid {
+                    info.path = get_cwd_for_pid(pid);
+                }
                 servers.push(info);
             }
         }
@@ -83,6 +87,7 @@ fn check_http_server(port: u16, client: &Client) -> Option<ServerInfo> {
                 title: title.trim().to_string(),
                 url,
                 pid: None, // Will be populated later
+                path: None, // Will be populated later
             })
         },
         Err(_) => None,
@@ -93,6 +98,7 @@ fn get_pid_for_port(port: u16) -> Option<u32> {
     let output = Command::new("lsof")
         .arg("-i")
         .arg(format!("tcp:{}", port))
+        .arg("-sTCP:LISTEN")
         .arg("-t")
         .output()
         .ok()?;
@@ -104,4 +110,31 @@ fn get_pid_for_port(port: u16) -> Option<u32> {
     } else {
         None
     }
+}
+
+fn get_cwd_for_pid(pid: u32) -> Option<String> {
+    println!("pid: {}", pid);
+    let output = Command::new("lsof")
+        .arg("-a")
+        .arg("-p")
+        .arg(pid.to_string())
+        .arg("-d")
+        .arg("cwd")
+        .arg("-F")
+        .arg("n")
+        .output()
+        .ok()?;
+
+    if output.status.success() {
+        let output_str = String::from_utf8_lossy(&output.stdout);
+        // Output format is like:
+        // p12345
+        // n/path/to/cwd
+        for line in output_str.lines() {
+            if line.starts_with('n') {
+                return Some(line[1..].to_string());
+            }
+        }
+    }
+    None
 }

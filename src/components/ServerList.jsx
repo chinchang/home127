@@ -21,8 +21,8 @@ function ServerList() {
   useEffect(() => {
     scan();
     // Optional: Poll every 5 seconds
-    const interval = setInterval(scan, 5000);
-    return () => clearInterval(interval);
+    // const interval = setInterval(scan, 5000);
+    // return () => clearInterval(interval);
   }, []);
 
   const handleVisit = async (url) => {
@@ -64,9 +64,16 @@ function ServerList() {
         <div key={server.port} className="server-item">
           <div className="server-info">
             <span className="server-port">:{server.port}</span>
-            <span className="server-title" title={server.title}>
-              {server.title}
-            </span>
+            <div className="server-details">
+              <span className="server-title" title={server.title}>
+                {server.title}
+              </span>
+              {server.path && (
+                <span className="server-path" title={server.path}>
+                  {server.path}
+                </span>
+              )}
+            </div>
           </div>
           <div className="server-actions">
             {server.pid && (

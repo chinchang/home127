@@ -20,7 +20,6 @@ body {
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100vh;
   overflow: hidden;
   background-color: transparent;
 }
@@ -29,7 +28,6 @@ body {
   width: 100%;
   max-width: 400px;
   height: auto;
-  max-height: 90vh;
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -88,7 +86,7 @@ h1 {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  max-height: 400px;
+  max-height: calc(100vh - 45px);
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
@@ -122,6 +120,12 @@ h1 {
   min-width: 0; /* Allow truncation */
 }
 
+.server-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 /* Port Badge - Blue Glossy Pill */
 .server-port {
   font-weight: 700;
@@ -140,13 +144,23 @@ h1 {
 /* Server Title */
 .server-title {
   font-size: 14px;
-  line-height: 2;
+  line-height: 1.4;
   font-weight: 600;
   color: #333;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Server Path */
+.server-path {
+  font-size: 11px;
+  color: #777;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
 /* Server Actions Group */
