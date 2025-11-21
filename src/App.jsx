@@ -4,12 +4,14 @@ import ServerList from "./components/ServerList";
 function App() {
   return (
     <div className="container">
-      <header>
-        <h1>Local Servers</h1>
-      </header>
-      <main>
-        <ServerList />
-      </main>
+      <div className="main-panel">
+        <header>
+          <h1>Witch Servers</h1>
+        </header>
+        <main>
+          <ServerList />
+        </main>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Server Tracker",
+  "productName": "Witch Server",
   "version": "0.1.0",
   "identifier": "com.witchserver.app",
   "build": {
@@ -12,8 +12,8 @@
   "app": {
     "windows": [
       {
-        "title": "Server Tracker",
-        "width": 300,
+        "title": "Witch Server",
+        "width": 350,
         "height": 400,
         "decorations": false,
         "transparent": true,
@@ -21,6 +21,7 @@
         "skipTaskbar": true
       }
     ],
+    "macOSPrivateApi": true,
     "security": {
       "csp": null
     }
