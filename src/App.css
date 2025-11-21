@@ -102,6 +102,7 @@ h1 {
   border-bottom: 1px solid #d0d0d0;
   border-top: 1px solid #fff;
   background: linear-gradient(to bottom, #f9f9f9 0%, #e9e9e9 100%);
+  position: relative; /* For absolute positioning of actions */
 }
 
 .server-item:last-child {
@@ -116,9 +117,9 @@ h1 {
 .server-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex: 1;
-  overflow: hidden;
+  min-width: 0; /* Allow truncation */
 }
 
 /* Port Badge - Blue Glossy Pill */
@@ -139,6 +140,7 @@ h1 {
 /* Server Title */
 .server-title {
   font-size: 14px;
+  line-height: 2;
   font-weight: 600;
   color: #333;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -152,6 +154,15 @@ h1 {
   display: flex;
   align-items: center;
   gap: 8px;
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  pointer-events: none; /* Prevent clicking when hidden */
 }
 
 /* Stop Button - Red Glossy */
@@ -173,14 +184,13 @@ h1 {
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3),
     0 1px 2px rgba(0, 0, 0, 0.2);
-  opacity: 0;
-  transition: 0.2s ease-in-out;
-  pointer-events: none; /* Prevent clicking when hidden */
 }
 
-.server-item:hover .stop-btn {
+.server-item:hover .server-actions {
   opacity: 1;
   pointer-events: auto;
+  position: static;
+  transform: none;
 }
 
 .stop-btn:hover {
