@@ -33,6 +33,16 @@ function ServerList() {
     }
   };
 
+  const handleStop = async (pid) => {
+    try {
+      await invoke("kill_server", { pid });
+      // Optional: Trigger a scan immediately to update the list
+      scan();
+    } catch (error) {
+      console.error("Failed to stop server:", error);
+    }
+  };
+
   if (loading && servers.length === 0) {
     return <div className="loading">Scanning...</div>;
   }
@@ -58,27 +68,38 @@ function ServerList() {
               {server.title}
             </span>
           </div>
-          <button
-            className="visit-btn"
-            onClick={() => handleVisit(server.url)}
-            title="Open in Browser"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          <div className="server-actions">
+            {server.pid && (
+              <button
+                className="stop-btn"
+                onClick={() => handleStop(server.pid)}
+                title="Stop Server"
+              >
+                Stop
+              </button>
+            )}
+            <button
+              className="visit-btn"
+              onClick={() => handleVisit(server.url)}
+              title="Open in Browser"
             >
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-              <polyline points="15 3 21 3 21 9"></polyline>
-              <line x1="10" y1="14" x2="21" y2="3"></line>
-            </svg>
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </button>
+          </div>
         </div>
       ))}
     </div>

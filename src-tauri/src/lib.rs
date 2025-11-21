@@ -1,5 +1,6 @@
 mod scanner;
 
+use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent, MouseButton, MouseButtonState};
 use tauri::Manager;
 
@@ -9,13 +10,56 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
+#[tauri::command]
+fn kill_server(pid: u32) -> Result<(), String> {
+    let output = std::process::Command::new("kill")
+        .arg("-9")
+        .arg(pid.to_string())
+        .output()
+        .map_err(|e| e.to_string())?;
+
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(String::from_utf8_lossy(&output.stderr).to_string())
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
+            let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+            let feedback_i = MenuItem::with_id(app, "feedback", "Give feedback", true, None::<&str>)?;
+            let about_i = MenuItem::with_id(app, "about", "About Home127", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&about_i, &feedback_i, &quit_i])?;
+
             let tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
+                .menu(&menu)
+                .menu_on_left_click(false)
+                .on_menu_event(|app, event| {
+                    match event.id().as_ref() {
+                        "quit" => {
+                            app.exit(0);
+                        }
+                        "feedback" => {
+                            let _ = std::process::Command::new("open")
+                                .arg("mailto:chinchang457@gmail.com")
+                                .spawn();
+                        }
+                        "about" => {
+                            // For now, just log to console as we don't have a dialog plugin
+                            println!("About Home127 clicked");
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                        _ => {}
+                    }
+                })
                 .on_tray_icon_event(|tray, event| {
                     if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, rect, .. } = event {
                         let app = tray.app_handle();
@@ -28,7 +72,7 @@ pub fn run() {
                                 let _ = window.set_focus();
                                 
                                 // Calculate position
-                                let window_width = 300.0;
+                                let window_width = 350.0;
                                 
                                 // Extract physical values from rect (assuming Physical for tray usually)
                                 let (icon_x, icon_width) = match rect.position {
@@ -73,7 +117,7 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet, scanner::scan_servers])
+        .invoke_handler(tauri::generate_handler![greet, scanner::scan_servers, kill_server])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

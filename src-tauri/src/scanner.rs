@@ -3,12 +3,14 @@ use std::net::{TcpStream, ToSocketAddrs};
 use std::time::Duration;
 use reqwest::blocking::Client;
 use scraper::{Html, Selector};
+use std::process::Command;
 
 #[derive(Serialize)]
 pub struct ServerInfo {
     port: u16,
     title: String,
     url: String,
+    pid: Option<u32>,
 }
 
 #[tauri::command]
@@ -34,7 +36,8 @@ pub fn scan_servers() -> Vec<ServerInfo> {
 
     for port in ports {
         if is_port_open(port) {
-            if let Some(info) = check_http_server(port, &client) {
+            if let Some(mut info) = check_http_server(port, &client) {
+                info.pid = get_pid_for_port(port);
                 servers.push(info);
             }
         }
@@ -78,9 +81,27 @@ fn check_http_server(port: u16, client: &Client) -> Option<ServerInfo> {
             Some(ServerInfo {
                 port,
                 title: title.trim().to_string(),
-                url
+                url,
+                pid: None, // Will be populated later
             })
         },
         Err(_) => None,
+    }
+}
+
+fn get_pid_for_port(port: u16) -> Option<u32> {
+    let output = Command::new("lsof")
+        .arg("-i")
+        .arg(format!("tcp:{}", port))
+        .arg("-t")
+        .output()
+        .ok()?;
+
+    if output.status.success() {
+        let pid_str = String::from_utf8_lossy(&output.stdout);
+        // Take the first line if multiple (though usually one for a specific port listener)
+        pid_str.lines().next().and_then(|s| s.trim().parse().ok())
+    } else {
+        None
     }
 }

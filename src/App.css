@@ -147,6 +147,57 @@ h1 {
   text-overflow: ellipsis;
 }
 
+/* Server Actions Group */
+.server-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Stop Button - Red Glossy */
+.stop-btn {
+  background: linear-gradient(
+    to bottom,
+    #d95a5a 0%,
+    #b02e2e 50%,
+    #961f1f 51%,
+    #c44d4d 100%
+  );
+  border: 1px solid #7a1a1a;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transition: 0.2s ease-in-out;
+  pointer-events: none; /* Prevent clicking when hidden */
+}
+
+.server-item:hover .stop-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.stop-btn:hover {
+  background: linear-gradient(
+    to bottom,
+    #e66b6b 0%,
+    #c43d3d 50%,
+    #a82b2b 51%,
+    #d65e5e 100%
+  );
+}
+
+.stop-btn:active {
+  background: linear-gradient(to bottom, #961f1f 0%, #b02e2e 100%);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
 /* Visit/Action Button - Toggle Switch Style or Action Button */
 .visit-btn {
   background: linear-gradient(to bottom, #e0e0e0 0%, #c0c0c0 100%);

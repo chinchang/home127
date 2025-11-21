@@ -6,7 +6,7 @@ function App() {
     <div className="container">
       <div className="main-panel">
         <header>
-          <h1>Witch Servers</h1>
+          <h1>Home127</h1>
         </header>
         <main>
           <ServerList />
