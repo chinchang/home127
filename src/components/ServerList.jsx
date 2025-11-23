@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 function ServerList() {
   const [servers, setServers] = useState([]);
@@ -20,9 +21,30 @@ function ServerList() {
 
   useEffect(() => {
     scan();
+
+    let unlisten;
+
+    const setupListener = async () => {
+      unlisten = await getCurrentWindow().onFocusChanged(
+        ({ payload: focused }) => {
+          if (focused) {
+            scan();
+          }
+        }
+      );
+    };
+
+    setupListener();
+
     // Optional: Poll every 5 seconds
     // const interval = setInterval(scan, 5000);
-    // return () => clearInterval(interval);
+
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+      // clearInterval(interval);
+    };
   }, []);
 
   const handleVisit = async (url) => {

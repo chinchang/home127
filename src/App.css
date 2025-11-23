@@ -36,10 +36,10 @@ body {
 
 /* Main Panel - Metallic/Glassy Box */
 .main-panel {
-  background: #e0e0e0;
+  /* background: #e0e0e0; */
   border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  /* box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.4), */
+  /* inset 0 1px 0 rgba(255, 255, 255, 0.5); */
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -51,22 +51,28 @@ header {
   background: linear-gradient(
     to bottom,
     #6d8fb3 0%,
-    #446d96 50%,
-    #2e5b87 51%,
-    #5b83ad 100%
+    #426a94 50%,
+    #2b537d 51%,
+    #1e4269 100%
   );
-  padding: 8px 12px;
-  border-bottom: 1px solid #2d4d73;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    0 1px 3px rgba(0, 0, 0, 0.3);
+  padding: 5px 15px;
   text-align: center;
+  border-bottom: 1px solid #153250;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
   position: relative;
   z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 44px;
-  box-sizing: border-box;
+  gap: 10px;
+}
+
+.app-icon {
+  width: 64px;
+  aspect-ratio: 1;
+  /* border-radius: 5px; */
+  /* box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); */
 }
 
 h1 {
@@ -76,7 +82,7 @@ h1 {
   color: #fff;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.5);
   letter-spacing: -0.5px;
-  flex: 1;
+  /* flex: 1; */
   text-align: center;
 }
 
@@ -86,7 +92,7 @@ h1 {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  max-height: calc(100vh - 45px);
+  max-height: calc(100vh - 75px);
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
