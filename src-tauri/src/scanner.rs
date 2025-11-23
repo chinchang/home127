@@ -32,7 +32,7 @@ pub async fn scan_servers() -> Vec<ServerInfo> {
     ];
     
     let client = Client::builder()
-        .timeout(Duration::from_millis(500))
+        .timeout(Duration::from_millis(2000))
         .build()
         .unwrap_or_else(|_| Client::new());
 

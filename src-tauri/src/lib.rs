@@ -29,6 +29,13 @@ fn kill_server(pid: u32) -> Result<(), String> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::Focused(focused) = event {
+                if !focused {
+                    let _ = window.hide();
+                }
+            }
+        })
         .setup(|app| {
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let feedback_i = MenuItem::with_id(app, "feedback", "Send feedback on chinchang457@gmail.com", true, None::<&str>)?;
