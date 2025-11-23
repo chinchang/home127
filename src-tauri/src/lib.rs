@@ -31,8 +31,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-            let feedback_i = MenuItem::with_id(app, "feedback", "Give feedback", true, None::<&str>)?;
-            let about_i = MenuItem::with_id(app, "about", "About Home127", true, None::<&str>)?;
+            let feedback_i = MenuItem::with_id(app, "feedback", "Send feedback on chinchang457@gmail.com", true, None::<&str>)?;
+            let about_i = MenuItem::with_id(app, "about", "Home127 v0.0.1 / Built by \"The CSSMonk\"", false, None::<&str>)?;
             let menu = Menu::with_items(app, &[&about_i, &feedback_i, &quit_i])?;
 
             let tray = TrayIconBuilder::new()
@@ -45,18 +45,12 @@ pub fn run() {
                             app.exit(0);
                         }
                         "feedback" => {
-                            let _ = std::process::Command::new("open")
-                                .arg("mailto:chinchang457@gmail.com")
+                            let _ = std::process::Command::new("sh")
+                                .arg("-c")
+                                .arg("echo 'chinchang457@gmail.com' | pbcopy")
                                 .spawn();
                         }
-                        "about" => {
-                            // For now, just log to console as we don't have a dialog plugin
-                            println!("About Home127 clicked");
-                            if let Some(window) = app.get_webview_window("main") {
-                                let _ = window.show();
-                                let _ = window.set_focus();
-                            }
-                        }
+
                         _ => {}
                     }
                 })
