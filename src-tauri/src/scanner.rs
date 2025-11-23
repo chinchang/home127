@@ -1,9 +1,11 @@
 use serde::Serialize;
-use std::net::{TcpStream, ToSocketAddrs};
+use std::net::ToSocketAddrs;
 use std::time::Duration;
-use reqwest::blocking::Client;
+use reqwest::Client;
 use scraper::{Html, Selector};
 use std::process::Command;
+use tokio::net::TcpStream;
+use futures::future::join_all;
 
 #[derive(Serialize)]
 pub struct ServerInfo {
@@ -15,7 +17,7 @@ pub struct ServerInfo {
 }
 
 #[tauri::command]
-pub fn scan_servers() -> Vec<ServerInfo> {
+pub async fn scan_servers() -> Vec<ServerInfo> {
     // Common development ports
     let ports = vec![
         3000, 3001, 3002, 3003, 3004, 3005,
@@ -29,40 +31,47 @@ pub fn scan_servers() -> Vec<ServerInfo> {
         4000, // Jekyll
     ];
     
-    let mut servers = Vec::new();
     let client = Client::builder()
         .timeout(Duration::from_millis(500))
         .build()
         .unwrap_or_else(|_| Client::new());
 
-    for port in ports {
-        if is_port_open(port) {
-            if let Some(mut info) = check_http_server(port, &client) {
-                info.pid = get_pid_for_port(port);
-                if let Some(pid) = info.pid {
-                    info.path = get_cwd_for_pid(pid);
+    let futures = ports.into_iter().map(|port| {
+        let client = client.clone();
+        async move {
+            if is_port_open(port).await {
+                if let Some(mut info) = check_http_server(port, &client).await {
+                    info.pid = get_pid_for_port(port);
+                    if let Some(pid) = info.pid {
+                        info.path = get_cwd_for_pid(pid);
+                    }
+                    return Some(info);
                 }
-                servers.push(info);
             }
+            None
         }
-    }
-    
-    servers
+    });
+
+    join_all(futures)
+        .await
+        .into_iter()
+        .filter_map(|x| x)
+        .collect()
 }
 
-fn is_port_open(port: u16) -> bool {
+async fn is_port_open(port: u16) -> bool {
     let addr = format!("127.0.0.1:{}", port);
     if let Ok(mut addrs) = addr.to_socket_addrs() {
         if let Some(addr) = addrs.next() {
-            return TcpStream::connect_timeout(&addr, Duration::from_millis(50)).is_ok();
+            return TcpStream::connect(addr).await.is_ok();
         }
     }
     false
 }
 
-fn check_http_server(port: u16, client: &Client) -> Option<ServerInfo> {
+async fn check_http_server(port: u16, client: &Client) -> Option<ServerInfo> {
     let url = format!("http://localhost:{}", port);
-    match client.get(&url).send() {
+    match client.get(&url).send().await {
         Ok(resp) => {
             // Basic check: if it returns 200 OK (or even 404/403, it's a server)
             // But we want HTML servers.
@@ -75,7 +84,7 @@ fn check_http_server(port: u16, client: &Client) -> Option<ServerInfo> {
                 return None;
             }
 
-            let body = resp.text().unwrap_or_default();
+            let body = resp.text().await.unwrap_or_default();
             let document = Html::parse_document(&body);
             let selector = Selector::parse("title").unwrap();
             let title = document.select(&selector).next()
@@ -113,7 +122,7 @@ fn get_pid_for_port(port: u16) -> Option<u32> {
 }
 
 fn get_cwd_for_pid(pid: u32) -> Option<String> {
-    println!("pid: {}", pid);
+    // println!("pid: {}", pid);
     let output = Command::new("lsof")
         .arg("-a")
         .arg("-p")

@@ -62,9 +62,6 @@ pub fn run() {
                             if window.is_visible().unwrap_or(false) {
                                 let _ = window.hide();
                             } else {
-                                let _ = window.show();
-                                let _ = window.set_focus();
-                                
                                 // Calculate position
                                 let window_width = 350.0;
                                 
@@ -96,6 +93,9 @@ pub fn run() {
                                         y: y as i32,
                                     }));
                                 }
+
+                                let _ = window.show();
+                                let _ = window.set_focus();
                             }
                         }
                     }
