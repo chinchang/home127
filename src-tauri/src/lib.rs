@@ -107,6 +107,7 @@ pub fn run() {
 
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.set_shadow(false);
+                let _ = window.set_visible_on_all_workspaces(true);
             }
 
             Ok(())
