@@ -1,6 +1,7 @@
 mod scanner;
 
 use tauri::menu::{Menu, MenuItem};
+use tauri::path::BaseDirectory;
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
@@ -129,10 +130,28 @@ pub fn run() {
                 }
             }
 
+            // Load custom tray icon
+            let tray_icon_path = app
+                .path()
+                .resolve("icons/system-tray-icon.png", BaseDirectory::Resource)?;
+
+            // Load custom icon if it exists, otherwise use default
+            let icon = if tray_icon_path.exists() {
+                let img = image::open(&tray_icon_path)
+                    .expect("Failed to open tray icon")
+                    .to_rgba8();
+                let (width, height) = img.dimensions();
+                let rgba = img.into_raw();
+                tauri::image::Image::new_owned(rgba, width, height)
+            } else {
+                app.default_window_icon().unwrap().clone()
+            };
+
             let _tray = TrayIconBuilder::new()
-                .icon(app.default_window_icon().unwrap().clone())
+                .icon(icon)
+                .icon_as_template(true)
                 .menu(&menu)
-                .menu_on_left_click(false)
+                .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id().as_ref() {
                     "quit" => {
                         app.exit(0);
