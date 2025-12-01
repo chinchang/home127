@@ -19,7 +19,8 @@
         "transparent": true,
         "visible": false,
         "skipTaskbar": true,
-        "alwaysOnTop": true
+        "alwaysOnTop": true,
+        "visibleOnAllWorkspaces": true
       }
     ],
     "macOSPrivateApi": true,
