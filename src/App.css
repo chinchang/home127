@@ -281,3 +281,56 @@ h1 {
   background: #ddd;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
+
+/* Start Button - Green Glossy */
+.start-btn {
+  background: linear-gradient(
+    to bottom,
+    #5ad95a 0%,
+    #2eb02e 50%,
+    #1f961f 51%,
+    #4dc44d 100%
+  );
+  border: 1px solid #1a7a1a;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.start-btn:hover {
+  background: linear-gradient(
+    to bottom,
+    #6be66b 0%,
+    #3dc43d 50%,
+    #2ba82b 51%,
+    #5ed65e 100%
+  );
+}
+
+.start-btn:active {
+  background: linear-gradient(to bottom, #1f961f 0%, #2eb02e 100%);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.start-btn:disabled {
+  background: #ccc;
+  border-color: #aaa;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Stopped Server Item */
+.server-item.stopped {
+  opacity: 0.8;
+  background: #fcfcfc;
+}
+
+.server-item.stopped .server-title {
+  color: #777;
+}

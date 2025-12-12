@@ -58,10 +58,24 @@ function ServerList() {
   const handleStop = async (pid) => {
     try {
       await invoke("kill_server", { pid });
-      // Optional: Trigger a scan immediately to update the list
-      scan();
+      // Trigger a scan immediately to update the list
+      setTimeout(scan, 500);
     } catch (error) {
       console.error("Failed to stop server:", error);
+    }
+  };
+
+  const handleStart = async (server) => {
+    if (!server.path || !server.command) return;
+    try {
+      await invoke("start_server", {
+        cwd: server.path,
+        command: server.command,
+      });
+      // Give it a moment to start before scanning
+      setTimeout(scan, 1000);
+    } catch (error) {
+      console.error("Failed to start server:", error);
     }
   };
 
@@ -83,9 +97,14 @@ function ServerList() {
   return (
     <div className="server-list">
       {servers.map((server) => (
-        <div key={server.port} className="server-item">
+        <div
+          key={server.path || server.port}
+          className={`server-item ${!server.active ? "stopped" : ""}`}
+        >
           <div className="server-info">
-            <span className="server-port">:{server.port}</span>
+            <span className="server-port">
+              {server.active ? `:${server.port}` : "Stopped"}
+            </span>
             <div className="server-details">
               <span className="server-title" title={server.title}>
                 {server.title}
@@ -98,36 +117,49 @@ function ServerList() {
             </div>
           </div>
           <div className="server-actions">
-            {server.pid && (
+            {server.active ? (
+              <>
+                {server.pid && (
+                  <button
+                    className="stop-btn"
+                    onClick={() => handleStop(server.pid)}
+                    title="Stop Server"
+                  >
+                    Stop
+                  </button>
+                )}
+                <button
+                  className="visit-btn"
+                  onClick={() => handleVisit(server.url)}
+                  title="Open in Browser"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                  </svg>
+                </button>
+              </>
+            ) : (
               <button
-                className="stop-btn"
-                onClick={() => handleStop(server.pid)}
-                title="Stop Server"
+                className="start-btn"
+                onClick={() => handleStart(server)}
+                title="Start Server"
+                disabled={!server.command}
               >
-                Stop
+                Start
               </button>
             )}
-            <button
-              className="visit-btn"
-              onClick={() => handleVisit(server.url)}
-              title="Open in Browser"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                <polyline points="15 3 21 3 21 9"></polyline>
-                <line x1="10" y1="14" x2="21" y2="3"></line>
-              </svg>
-            </button>
           </div>
         </div>
       ))}

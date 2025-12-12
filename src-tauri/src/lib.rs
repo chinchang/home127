@@ -40,6 +40,19 @@ fn kill_server(pid: u32) -> Result<(), String> {
     }
 }
 
+#[tauri::command]
+fn start_server(cwd: String, command: String) -> Result<(), String> {
+    // Use sh -c to execute the command string in the given directory
+    std::process::Command::new("sh")
+        .arg("-c")
+        .arg(command)
+        .current_dir(cwd)
+        .spawn()
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default().plugin(tauri_plugin_opener::init());
@@ -64,13 +77,6 @@ pub fn run() {
                 "feedback",
                 "Send feedback on chinchang457@gmail.com",
                 true,
-                None::<&str>,
-            )?;
-            let about_i = MenuItem::with_id(
-                app,
-                "about",
-                "Home127 v0.0.1 / Built by \"The CSSMonk\"",
-                false,
                 None::<&str>,
             )?;
             let about_i = MenuItem::with_id(
@@ -232,7 +238,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             greet,
             scanner::scan_servers,
-            kill_server
+            kill_server,
+            start_server
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
