@@ -36,14 +36,10 @@ function ServerList() {
 
     setupListener();
 
-    // Optional: Poll every 5 seconds
-    // const interval = setInterval(scan, 5000);
-
     return () => {
       if (unlisten) {
         unlisten();
       }
-      // clearInterval(interval);
     };
   }, []);
 

@@ -51,7 +51,7 @@ pub async fn scan_servers(app: AppHandle) -> Vec<ServerInfo> {
                     info.pid = get_pid_for_port(port);
                     if let Some(pid) = info.pid {
                         info.path = get_cwd_for_pid(pid);
-                        info.command = get_cmdline_from_pid(pid as i32);
+                        info.command = get_best_cmdline_for_pid(pid as i32);
                     }
                     println!("[scanner] Port {} -> Command: {:?}", port, info.command);
                     info.active = true;
@@ -225,6 +225,70 @@ fn get_cwd_for_pid(pid: u32) -> Option<String> {
         }
     }
     None
+}
+
+/// Get parent PID for a given PID
+fn get_ppid(pid: u32) -> Option<u32> {
+    let output = Command::new("ps")
+        .arg("-p")
+        .arg(pid.to_string())
+        .arg("-o")
+        .arg("ppid=")
+        .output()
+        .ok()?;
+
+    if output.status.success() {
+        let ppid_str = String::from_utf8_lossy(&output.stdout);
+        ppid_str.trim().parse().ok()
+    } else {
+        None
+    }
+}
+
+/// Check if a command looks like a renamed child process (e.g., "next-server (v16.0.7)")
+fn is_renamed_child_process(cmd: &str) -> bool {
+    // Common patterns for renamed child processes:
+    // - Contains version in parentheses like "(v16.0.7)"
+    // - Is just a simple name without a path or arguments
+    // - Doesn't start with a path or common executable
+
+    // Check for version pattern like "(vX.X.X)" or "(version)"
+    if cmd.contains("(v") && cmd.contains(")") {
+        return true;
+    }
+
+    // Check if it's a simple name without any path separators or meaningful args
+    let first_arg = cmd.split_whitespace().next().unwrap_or("");
+    if !first_arg.contains('/') && !first_arg.ends_with(".js") && !first_arg.ends_with(".ts") {
+        // If first argument is not a path and cmd is very short, likely renamed
+        if cmd.len() < 50 && !cmd.contains("--") && !cmd.contains("-p") {
+            return true;
+        }
+    }
+
+    false
+}
+
+/// Try to get the best command line by walking up the process tree if needed
+fn get_best_cmdline_for_pid(pid: i32) -> Option<String> {
+    let cmd = get_cmdline_from_pid(pid)?;
+
+    // If the command looks like a renamed child process, try the parent
+    if is_renamed_child_process(&cmd) {
+        if let Some(ppid) = get_ppid(pid as u32) {
+            // Don't go above PID 1 (init) and avoid very low PIDs
+            if ppid > 1 {
+                if let Some(parent_cmd) = get_cmdline_from_pid(ppid as i32) {
+                    // Only use parent command if it looks more meaningful
+                    if !is_renamed_child_process(&parent_cmd) {
+                        return Some(parent_cmd);
+                    }
+                }
+            }
+        }
+    }
+
+    Some(cmd)
 }
 
 // Replaces get_command_for_pid with KERN_PROCARGS2 logic
