@@ -99,7 +99,7 @@ function ServerList() {
         >
           <div className="server-info">
             <span className="server-port">
-              {server.active ? `:${server.port}` : "Stopped"}
+              {server.active ? `:${server.port}` : ":oxox"}
             </span>
             <div className="server-details">
               <span className="server-title" title={server.title}>
