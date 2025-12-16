@@ -147,6 +147,11 @@ h1 {
   text-align: center;
 }
 
+.server-port.running {
+  background: linear-gradient(to bottom, #2eb02e 0%, #187d18 100%);
+  border-color: #1a7a1a;
+}
+
 /* Server Title */
 .server-title {
   font-size: 14px;

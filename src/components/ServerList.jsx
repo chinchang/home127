@@ -100,7 +100,7 @@ function ServerList() {
           className={`server-item ${!server.active ? "stopped" : ""}`}
         >
           <div className="server-info">
-            <span className="server-port">
+            <span className={`server-port ${server.active ? "running" : ""}`}>
               {server.active ? `:${server.port}` : ":oxox"}
             </span>
             <div className="server-details">
