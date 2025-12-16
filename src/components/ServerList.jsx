@@ -68,8 +68,10 @@ function ServerList() {
         cwd: server.path,
         command: server.command,
       });
-      // Give it a moment to start before scanning
+      // Give it a moment to start before scanning. Scan twice, just in case
+      // server starts after first scan.
       setTimeout(scan, 1000);
+      setTimeout(scan, 4000);
     } catch (error) {
       console.error("Failed to start server:", error);
     }
