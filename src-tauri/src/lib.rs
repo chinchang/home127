@@ -42,10 +42,21 @@ fn kill_server(pid: u32) -> Result<(), String> {
 
 #[tauri::command]
 fn start_server(cwd: String, command: String) -> Result<(), String> {
-    // Use sh -c to execute the command string in the given directory
-    std::process::Command::new("sh")
+    // Robust environment setup for macOS production bundles:
+    // 1. Manually add common Homebrew/local bin paths (fix for non-NVM users)
+    // 2. Explicitly try to source NVM if present (fix for NVM users)
+    // 3. Use standard zsh execution without -l/-i to avoid TTY/startup file issues
+    let setup_cmd = format!(
+        "export PATH=$PATH:/usr/local/bin:/opt/homebrew/bin; \
+         export NVM_DIR=\"$HOME/.nvm\"; \
+         [ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"; \
+         {}",
+        command
+    );
+
+    std::process::Command::new("zsh")
         .arg("-c")
-        .arg(command)
+        .arg(setup_cmd)
         .current_dir(cwd)
         .spawn()
         .map_err(|e| e.to_string())?;
