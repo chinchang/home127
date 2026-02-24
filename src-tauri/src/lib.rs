@@ -93,7 +93,7 @@ pub fn run() {
             let about_i = MenuItem::with_id(
                 app,
                 "about",
-                "Home127 v0.0.1 / Built by \"The CSSMonk\"",
+                "Home127 v0.1.0 / Built by \"The CSSMonk\"",
                 false,
                 None::<&str>,
             )?;
