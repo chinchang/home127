@@ -2,15 +2,13 @@ use futures::future::join_all;
 use reqwest::Client;
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
-use std::net::ToSocketAddrs;
 use std::path::PathBuf;
 use std::process::Command;
 use std::time::Duration;
 use tauri::AppHandle;
 use tauri::Manager;
-use tokio::net::TcpStream;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ServerInfo {
@@ -25,17 +23,9 @@ pub struct ServerInfo {
 
 #[tauri::command]
 pub async fn scan_servers(app: AppHandle) -> Vec<ServerInfo> {
-    // Common development ports
-    let ports = vec![
-        3000, 3001, 3002, 3003, 3004, 3005, 8000, 8001, 8002, 8080, 8081, 5173, 5174, // Vite
-        4200, // Angular
-        4321, // Astro
-        5000, 5001, // Flask/Python
-        8888, // Jupyter
-        1313, // Hugo
-        4000, // Jekyll
-        3333,
-    ];
+    // Dynamically discover all listening TCP ports
+    let ports = discover_listening_ports();
+    println!("[scanner] Discovered {} candidate ports: {:?}", ports.len(), ports);
 
     let client = Client::builder()
         .timeout(Duration::from_millis(2000))
@@ -46,17 +36,15 @@ pub async fn scan_servers(app: AppHandle) -> Vec<ServerInfo> {
     let futures = ports.into_iter().map(|port| {
         let client = client.clone();
         async move {
-            if is_port_open(port).await {
-                if let Some(mut info) = check_http_server(port, &client).await {
-                    info.pid = get_pid_for_port(port);
-                    if let Some(pid) = info.pid {
-                        info.path = get_cwd_for_pid(pid);
-                        info.command = get_best_cmdline_for_pid(pid as i32);
-                    }
-                    println!("[scanner] Port {} -> Command: {:?}", port, info.command);
-                    info.active = true;
-                    return Some(info);
+            if let Some(mut info) = check_http_server(port, &client).await {
+                info.pid = get_pid_for_port(port);
+                if let Some(pid) = info.pid {
+                    info.path = get_cwd_for_pid(pid);
+                    info.command = get_best_cmdline_for_pid(pid as i32);
                 }
+                println!("[scanner] Port {} -> Command: {:?}", port, info.command);
+                info.active = true;
+                return Some(info);
             }
             None
         }
@@ -139,14 +127,71 @@ fn save_servers(app: &AppHandle, servers: &Vec<ServerInfo>) -> std::io::Result<(
     Ok(())
 }
 
-async fn is_port_open(port: u16) -> bool {
-    let addr = format!("127.0.0.1:{}", port);
-    if let Ok(mut addrs) = addr.to_socket_addrs() {
-        if let Some(addr) = addrs.next() {
-            return TcpStream::connect(addr).await.is_ok();
+/// Discover all TCP ports currently in LISTEN state using lsof.
+/// Filters out known system/database ports and ephemeral ports.
+fn discover_listening_ports() -> Vec<u16> {
+    let output = match Command::new("/usr/sbin/lsof")
+        .arg("-iTCP")
+        .arg("-sTCP:LISTEN")
+        .arg("-P")
+        .arg("-n")
+        .output()
+    {
+        Ok(output) => output,
+        Err(e) => {
+            eprintln!("[scanner] Failed to run lsof: {}", e);
+            return Vec::new();
+        }
+    };
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let mut ports = HashSet::new();
+
+    for line in stdout.lines().skip(1) {
+        let fields: Vec<&str> = line.split_whitespace().collect();
+        // NAME is second-to-last field; last field is "(LISTEN)"
+        // e.g. "TCP *:8080 (LISTEN)" → fields = [..., "TCP", "*:8080", "(LISTEN)"]
+        if fields.len() < 2 {
+            continue;
+        }
+        let name = fields[fields.len() - 2];
+
+        // Parse port from NAME field: "*:8080", "127.0.0.1:3000", "[::1]:3000"
+        if let Some(port_str) = name.rsplit(':').next() {
+            if let Ok(port) = port_str.parse::<u16>() {
+                ports.insert(port);
+            }
         }
     }
-    false
+
+    // System/infrastructure ports to skip (never dev web servers)
+    let skip_ports: &[u16] = &[
+        22,    // SSH
+        53,    // DNS
+        88,    // Kerberos
+        443,   // HTTPS (system)
+        445,   // SMB
+        631,   // CUPS
+        1900,  // SSDP/UPnP
+        3306,  // MySQL
+        3722,  // rapportd (Apple)
+        5353,  // mDNS
+        5432,  // PostgreSQL
+        6379,  // Redis
+        7000,  // AirPlay (ControlCenter)
+        27017, // MongoDB
+    ];
+
+    for &p in skip_ports {
+        ports.remove(&p);
+    }
+
+    // Skip ephemeral port range (OS-assigned, never intentional dev servers)
+    ports.retain(|&p| p < 49152);
+
+    let mut result: Vec<u16> = ports.into_iter().collect();
+    result.sort();
+    result
 }
 
 async fn check_http_server(port: u16, client: &Client) -> Option<ServerInfo> {
@@ -187,7 +232,7 @@ async fn check_http_server(port: u16, client: &Client) -> Option<ServerInfo> {
 }
 
 fn get_pid_for_port(port: u16) -> Option<u32> {
-    let output = Command::new("lsof")
+    let output = Command::new("/usr/sbin/lsof")
         .arg("-i")
         .arg(format!(":{}", port))
         .arg("-sTCP:LISTEN")
@@ -205,7 +250,7 @@ fn get_pid_for_port(port: u16) -> Option<u32> {
 }
 
 fn get_cwd_for_pid(pid: u32) -> Option<String> {
-    let output = Command::new("lsof")
+    let output = Command::new("/usr/sbin/lsof")
         .arg("-a")
         .arg("-p")
         .arg(pid.to_string())
