@@ -1,7 +1,4 @@
-# Tauri + React
+# Home127
+Discovers your web servers and puts them in your menubar for quick access
 
-This template should help get you started developing with Tauri and React in Vite.
-
-## Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+<img width="1024" height="1024" alt="icon" src="https://github.com/user-attachments/assets/61e5317c-a3b1-470a-9b29-aee5d68736e6" />
