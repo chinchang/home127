@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
-function ServerList() {
+function ServerList({ onServersChange }) {
   const [servers, setServers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -18,6 +18,10 @@ function ServerList() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    onServersChange?.(servers.length, scan);
+  }, [servers.length]);
 
   useEffect(() => {
     scan();
@@ -156,6 +160,27 @@ function ServerList() {
                 disabled={!server.command}
               >
                 Start
+              </button>
+            )}
+            {server.path && (
+              <button
+                className="visit-btn"
+                onClick={() => revealItemInDir(server.path)}
+                title="Open in Finder"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
               </button>
             )}
           </div>
