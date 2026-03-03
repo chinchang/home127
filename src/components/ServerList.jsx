@@ -6,6 +6,8 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 function ServerList({ onServersChange }) {
   const [servers, setServers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingPath, setEditingPath] = useState(null);
+  const [editValue, setEditValue] = useState("");
 
   const scan = async () => {
     setLoading(true);
@@ -81,6 +83,19 @@ function ServerList({ onServersChange }) {
     }
   };
 
+  const handleRename = async (serverPath, newName) => {
+    setEditingPath(null);
+    try {
+      const result = await invoke("rename_server", {
+        path: serverPath,
+        customName: newName || null,
+      });
+      setServers(result);
+    } catch (error) {
+      console.error("Failed to rename server:", error);
+    }
+  };
+
   if (loading && servers.length === 0) {
     return <div className="loading">Scanning...</div>;
   }
@@ -108,9 +123,40 @@ function ServerList({ onServersChange }) {
               {server.active ? `:${server.port}` : ":oxox"}
             </span>
             <div className="server-details">
-              <span className="server-title" title={server.title}>
-                {server.title}
-              </span>
+              {editingPath === server.path ? (
+                <input
+                  className="server-title-input"
+                  type="text"
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  onBlur={() => handleRename(server.path, editValue)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleRename(server.path, editValue);
+                    } else if (e.key === "Escape") {
+                      setEditingPath(null);
+                    }
+                  }}
+                  autoFocus
+                  maxLength={50}
+                />
+              ) : (
+                <span
+                  className="server-title"
+                  title={
+                    server.custom_name
+                      ? `${server.title} (detected)`
+                      : server.title
+                  }
+                  onDoubleClick={() => {
+                    if (!server.path) return;
+                    setEditingPath(server.path);
+                    setEditValue(server.custom_name || server.title);
+                  }}
+                >
+                  {server.custom_name || server.title}
+                </span>
+              )}
               {server.path && (
                 <span className="server-path" title={server.path}>
                   {server.path}

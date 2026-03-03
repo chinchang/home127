@@ -199,6 +199,26 @@ h1 {
   text-overflow: ellipsis;
 }
 
+/* Server Title Inline Edit */
+.server-title-input {
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 600;
+  color: #333;
+  border: 1px solid #4a90e2;
+  border-radius: 3px;
+  padding: 0px 4px;
+  background: #fff;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.server-title-input:focus {
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+}
+
 /* Server Path */
 .server-path {
   font-size: 11px;

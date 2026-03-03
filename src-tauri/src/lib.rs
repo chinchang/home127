@@ -249,6 +249,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             greet,
             scanner::scan_servers,
+            scanner::rename_server,
             kill_server,
             start_server
         ])

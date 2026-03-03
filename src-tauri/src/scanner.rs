@@ -19,6 +19,8 @@ pub struct ServerInfo {
     path: Option<String>,
     command: Option<String>,
     active: bool,
+    #[serde(default)]
+    custom_name: Option<String>,
 }
 
 #[tauri::command]
@@ -76,8 +78,15 @@ pub async fn scan_servers(app: AppHandle) -> Vec<ServerInfo> {
     for server in persisted_servers.iter_mut() {
         if let Some(path) = &server.path {
             if let Some(running) = running_map.remove(path) {
-                // Server is running, update info
-                *server = running;
+                // Server is running, update scanned fields but preserve user data
+                server.port = running.port;
+                server.title = running.title;
+                server.url = running.url;
+                server.pid = running.pid;
+                server.path = running.path;
+                server.command = running.command;
+                server.active = running.active;
+                // custom_name intentionally NOT overwritten
             } else {
                 // Server is not running, mark as inactive
                 server.active = false;
@@ -125,6 +134,30 @@ fn save_servers(app: &AppHandle, servers: &Vec<ServerInfo>) -> std::io::Result<(
         fs::write(path, content)?;
     }
     Ok(())
+}
+
+#[tauri::command]
+pub async fn rename_server(
+    app: AppHandle,
+    path: String,
+    custom_name: Option<String>,
+) -> Result<Vec<ServerInfo>, String> {
+    let mut servers = load_servers(&app).unwrap_or_default();
+
+    let found = servers.iter_mut().find(|s| s.path.as_deref() == Some(&path));
+
+    match found {
+        Some(server) => {
+            server.custom_name = custom_name
+                .map(|n| n.trim().to_string())
+                .filter(|n| !n.is_empty());
+
+            save_servers(&app, &servers).map_err(|e| format!("Failed to save: {}", e))?;
+
+            Ok(servers)
+        }
+        None => Err(format!("Server with path '{}' not found", path)),
+    }
 }
 
 /// Discover all TCP ports currently in LISTEN state using lsof.
@@ -225,6 +258,7 @@ async fn check_http_server(port: u16, client: &Client) -> Option<ServerInfo> {
                 path: None,
                 command: None,
                 active: true,
+                custom_name: None,
             })
         }
         Err(_) => None,
