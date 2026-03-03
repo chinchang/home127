@@ -83,6 +83,15 @@ function ServerList({ onServersChange }) {
     }
   };
 
+  const handleRemove = async (serverPath) => {
+    try {
+      const result = await invoke("remove_server", { path: serverPath });
+      setServers(result);
+    } catch (error) {
+      console.error("Failed to remove server:", error);
+    }
+  };
+
   const handleRename = async (serverPath, newName) => {
     setEditingPath(null);
     try {
@@ -199,14 +208,38 @@ function ServerList({ onServersChange }) {
                 </button>
               </>
             ) : (
-              <button
-                className="start-btn"
-                onClick={() => handleStart(server)}
-                title="Start Server"
-                disabled={!server.command}
-              >
-                Start
-              </button>
+              <>
+                <button
+                  className="start-btn"
+                  onClick={() => handleStart(server)}
+                  title="Start Server"
+                  disabled={!server.command}
+                >
+                  Start
+                </button>
+                {server.path && (
+                  <button
+                    className="remove-btn"
+                    onClick={() => handleRemove(server.path)}
+                    title="Remove from list"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                )}
+              </>
             )}
             {server.path && (
               <button

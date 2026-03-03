@@ -250,6 +250,7 @@ pub fn run() {
             greet,
             scanner::scan_servers,
             scanner::rename_server,
+            scanner::remove_server,
             kill_server,
             start_server
         ])

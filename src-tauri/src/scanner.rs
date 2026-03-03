@@ -160,6 +160,25 @@ pub async fn rename_server(
     }
 }
 
+#[tauri::command]
+pub async fn remove_server(
+    app: AppHandle,
+    path: String,
+) -> Result<Vec<ServerInfo>, String> {
+    let mut servers = load_servers(&app).unwrap_or_default();
+
+    let before_len = servers.len();
+    servers.retain(|s| s.path.as_deref() != Some(&path));
+
+    if servers.len() == before_len {
+        return Err(format!("Server with path '{}' not found", path));
+    }
+
+    save_servers(&app, &servers).map_err(|e| format!("Failed to save: {}", e))?;
+
+    Ok(servers)
+}
+
 /// Discover all TCP ports currently in LISTEN state using lsof.
 /// Filters out known system/database ports and ephemeral ports.
 fn discover_listening_ports() -> Vec<u16> {
